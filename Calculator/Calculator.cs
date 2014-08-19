@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 
 namespace Calculator
 {
-    // TODO: Make it singleton
     public class Calculator
     {
-        private Operand _first = new Operand();
-        private Operand _second = new Operand();
+        private Operand _first;
+        private Operand _second;
         private double _result;
 
         private delegate double OperatorDelegate(double x, double y);
-        private Dictionary<string, OperatorDelegate> _operations;
+        private Dictionary<string, OperatorDelegate> _operators;
 
         public string Operator { get; set; }
 
@@ -75,18 +74,24 @@ namespace Calculator
             }
         }
 
-
-        public Calculator()
+        private static Calculator _instance = new Calculator();
+        public static Calculator Instance
         {
+            get { return _instance; }
+        }
+
+        private Calculator()
+        {
+            _first = new Operand();
+            _second = new Operand();
             _result = Double.NaN;
 
-            _operations =
-            new Dictionary<string, OperatorDelegate>
+            _operators = new Dictionary<string, OperatorDelegate>
             {
-                { "+", delegate(double a, double b) {return a + b;} },
-               // { "-", this.DoSubtraction },
-               // { "*", this.DoMultiplication },
-               // { "/", this.DoDivision },
+                { "+", (double a, double b) => (a + b) },
+                { "-", (double a, double b) => (a - b) },
+                { "*", (double a, double b) => (a * b) },
+                { "/", (double a, double b) => (a / b) },
             };
         }
 
@@ -102,15 +107,20 @@ namespace Calculator
             }
         }
 
-        public void AddOperator(string operatorToAdd)
+        public void AddOperator(string symbolToAdd)
         {
-            Operator = operatorToAdd;
+            if (!String.IsNullOrEmpty(Operator))
+            {
+                ExecuteOperation();
+                _firstOp = _result;
+            }
+            Operator = symbolToAdd;
             _secondOp = Double.NaN;
         }
 
         public List<string> GetAvailableOperators()
         {
-            return _operations.Keys.ToList();
+            return _operators.Keys.ToList();
         }
 
         public bool IsAvailableOperator(string operatorToCheck)
@@ -134,16 +144,15 @@ namespace Calculator
             }
             if (!IsAvailableOperator(Operator))
             {
-                throw new Exception("Operator Is Not Available");
+                throw new Exception(String.Format("Operator '{0}' Is Not Available", Operator));
             }
-            _result = _operations[Operator](_firstOp, _secondOp);
-
-            AfterOperation();
+            _result = _operators[Operator](_firstOp, _secondOp);
         }
 
-        private void AfterOperation()
+        public void AfterOperation()
         {
-            _firstOp = _result;
+            _firstOp = _secondOp = Double.NaN;
+            Operator = String.Empty;
         }
     }
 }
