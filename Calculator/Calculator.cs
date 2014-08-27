@@ -8,8 +8,8 @@ namespace Calculator
 {
     public class Calculator
     {
-        private Operand _first;
-        private Operand _second;
+        private double _first;
+        private double _second;
         private double _result;
 
         private delegate double OperatorDelegate(double x, double y);
@@ -17,28 +17,6 @@ namespace Calculator
 
         public string Operator { get; set; }
 
-        private double _firstOp
-        {
-            get
-            {
-                return _first.Value;
-            }
-            set
-            {
-                _first.Value = value;
-            }
-        }
-        private double _secondOp
-        {
-            get
-            {
-                return _second.Value;
-            }
-            set
-            {
-                _second.Value = value;
-            }
-        }
         public double Result
         {
             get
@@ -49,20 +27,31 @@ namespace Calculator
                 }
                 else
                 {
-                    if (!Double.IsNaN(CurrentOperand.Value))
+                    if (!Double.IsNaN(CurrentOperandValue))
                     {
-                        return CurrentOperand.Value;
+                        return CurrentOperandValue;
                     }
                     return 0d;
                 }
             }
         }
 
-        private Operand CurrentOperand
+        private double CurrentOperandValue
         {
             get
             {
                 return (IsFirstOpReady ? _second : _first);
+            }
+            set
+            {
+                if (IsFirstOpReady)
+                {
+                    _second = value;
+                }
+                else
+                {
+                    _first = value;
+                }
             }
         }
 
@@ -82,28 +71,28 @@ namespace Calculator
 
         private Calculator()
         {
-            _first = new Operand();
-            _second = new Operand();
+            _first = Double.NaN;
+            _second = Double.NaN;
             _result = Double.NaN;
 
             _operators = new Dictionary<string, OperatorDelegate>
             {
-                { "+", (double a, double b) => (a + b) },
-                { "-", (double a, double b) => (a - b) },
-                { "*", (double a, double b) => (a * b) },
-                { "/", (double a, double b) => (a / b) },
+                { "+", (a, b) => (a + b) },
+                { "-", (a, b) => (a - b) },
+                { "*", (a, b) => (a * b) },
+                { "/", (a, b) => (a / b) },
             };
         }
 
         public void AddDigitToCurrentOperand(byte digit)
         {
-            if (Double.IsNaN(CurrentOperand.Value))
+            if (Double.IsNaN(CurrentOperandValue))
             {
-                CurrentOperand.Value = digit;
+                CurrentOperandValue = digit;
             }
             else
             {
-                CurrentOperand.Value = CurrentOperand.Value * 10 + digit;
+                CurrentOperandValue = CurrentOperandValue * 10 + digit;
             }
         }
 
@@ -112,10 +101,10 @@ namespace Calculator
             if (!String.IsNullOrEmpty(Operator))
             {
                 ExecuteOperation();
-                _firstOp = _result;
+                _first = _result;
             }
             Operator = symbolToAdd;
-            _secondOp = Double.NaN;
+            _second = Double.NaN;
         }
 
         public List<string> GetAvailableOperators()
@@ -130,11 +119,11 @@ namespace Calculator
 
         public void ExecuteOperation()
         {
-            if (Double.IsNaN(_firstOp))
+            if (Double.IsNaN(_first))
             {
                 throw new Exception("First Operand Is Missing");
             }
-            if (Double.IsNaN(_secondOp))
+            if (Double.IsNaN(_second))
             {
                 throw new Exception("Second Operand Is Missing");
             }
@@ -146,12 +135,12 @@ namespace Calculator
             {
                 throw new Exception(String.Format("Operator '{0}' Is Not Available", Operator));
             }
-            _result = _operators[Operator](_firstOp, _secondOp);
+            _result = _operators[Operator](_first, _second);
         }
 
         public void AfterOperation()
         {
-            _firstOp = _secondOp = Double.NaN;
+            _first = _second = Double.NaN;
             Operator = String.Empty;
         }
     }
