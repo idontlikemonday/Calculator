@@ -96,32 +96,49 @@ namespace Calculator
             }
         }
 
-        public void AddOperator(string symbolToAdd)
+        public void AddOperatorOrExecuteChainOfOperations(string symbolToAdd)
         {
-            if (!String.IsNullOrEmpty(Operator))
+            if (!IsOperatorEmpty())
             {
-                ExecuteOperation();
+                TryExecuteOperation();
                 _first = _result;
             }
-            Operator = symbolToAdd;
+             Operator = symbolToAdd;
             _second = Double.NaN;
         }
 
-        public List<string> GetAvailableOperators()
+        private bool IsOperatorEmpty()
         {
-            return _operators.Keys.ToList();
+            return String.IsNullOrEmpty(Operator);
         }
 
-        public bool IsAvailableOperator(string operatorToCheck)
+        public void TryExecuteOperation()
         {
-            return GetAvailableOperators().Contains(operatorToCheck);
+            try
+            {
+                ExecuteOperation();
+                Console.WriteLine(String.Format("={0}", Calculator.Instance.Result));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine();
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                AfterOperation();
+            }
         }
 
-        public void ExecuteOperation()
+        private void ExecuteOperation()
         {
             if (Double.IsNaN(_first))
             {
-                throw new Exception("First Operand Is Missing");
+                if (Double.IsNaN(_result))
+                {
+                    throw new Exception("First Operand Is Missing");
+                }
+                _first = _result;
             }
             if (Double.IsNaN(_second))
             {
@@ -138,7 +155,16 @@ namespace Calculator
             _result = _operators[Operator](_first, _second);
         }
 
-        public void AfterOperation()
+        private bool IsAvailableOperator(string operatorToCheck)
+        {
+            return GetAvailableOperators().Contains(operatorToCheck);
+        }
+        private List<string> GetAvailableOperators()
+        {
+            return _operators.Keys.ToList();
+        }
+
+        private void AfterOperation()
         {
             _first = _second = Double.NaN;
             Operator = String.Empty;

@@ -8,39 +8,41 @@ namespace Calculator
 {
     class Program
     {
-        // TODO: Refactor this
         public static void Main(string[] args)
         {
-            while (true)
+            var key = Console.ReadKey(true);
+            while (!IsEscapePressed(key))
             {
-                var key = Console.ReadKey();
-
-                if (key.Key == ConsoleKey.Enter)
+                if (IsEnterPressed(key))
                 {
-                    Console.WriteLine();
-                    try
-                    {
-                        Calculator.Instance.ExecuteOperation();
-                        Console.WriteLine(Calculator.Instance.Result);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-                    finally
-                    {
-                        Calculator.Instance.AfterOperation();
-                    }
+                    Calculator.Instance.TryExecuteOperation();
                 }
-                else if (Char.IsDigit(key.KeyChar))
+                else if (IsDigitKeyPressed(key))
                 {
                     Calculator.Instance.AddDigitToCurrentOperand(Convert.ToByte(key.KeyChar.ToString()));
                 }
                 else
                 {
-                    Calculator.Instance.AddOperator(key.KeyChar.ToString());
+                    Calculator.Instance.AddOperatorOrExecuteChainOfOperations(key.KeyChar.ToString());
                 }
+                Console.Write(key.KeyChar);
+                key = Console.ReadKey(true);
             }
+        }
+
+        private static bool IsEscapePressed(ConsoleKeyInfo key)
+        {
+            return key.Key == ConsoleKey.Escape;
+        }
+
+        private static bool IsEnterPressed(ConsoleKeyInfo key)
+        {
+            return key.Key == ConsoleKey.Enter;
+        }
+
+        private static bool IsDigitKeyPressed(ConsoleKeyInfo key)
+        {
+            return Char.IsDigit(key.KeyChar);
         }
     }
 }
